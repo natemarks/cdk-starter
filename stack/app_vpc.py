@@ -1,5 +1,10 @@
 """ AppVpc Stack Module
-Stack and Stack Input classes to deploy the Application VPC template
+
+Stack and Stack Input classes to manage the Application VPC template
+
+Use AppVpcInput.from_config_directory to create an AppVpcInput instance from a
+data_path. A data path is a pathlib.Path to a directory containing the settings
+for an environment
 
 """
 

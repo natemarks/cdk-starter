@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """ compare the app_vpc stack to the expected stacks
 
-use test data for teh actual environments and any other contrived cases that
-seem useful
+These tests provide examples for cretaing the stacks. 
+use test data for teh actual environments and any other contrived cases
+that seem useful
 
 
 """
@@ -30,6 +31,39 @@ def test_app_vpc_stack_actual(request, environment, update_golden):
     input_path = get_actual_path(environment)
     # test_data path for case
     data_path = case_data_path(request)
+    s_input = AppVpcInput.from_config_directory(input_path)
+
+    app = App()
+
+    stk = AppVpcStack(
+        scope=app,
+        cdk_env=Environment(),
+        s_input=s_input,
+    )
+    template = assertions.Template.from_stack(stk)
+    if update_golden:
+        update_data_file(
+            data_path,
+            "expected.json",
+            json.dumps(template.to_json(), indent=2),
+        )
+
+    template.template_matches(read_json_data_file(data_path, "expected.json"))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "",
+    [
+        pytest.param(id="explore_new_setting"),
+    ],
+)
+def test_app_vpc_stack_custom(request, update_golden):
+    """test app_vpc stack"""
+    # test_data path for case
+    data_path = case_data_path(request)
+    # the custom input files are in the case data
+    input_path = data_path
     s_input = AppVpcInput.from_config_directory(input_path)
 
     app = App()
