@@ -89,12 +89,12 @@ aws-update_golden: ## update golden files with actual results
        python3 -m pytest -v -m "aws" tests/ --update_golden; \
     )
 
-static: shellcheck black pylint unit-test ##  run all static checks
+static: .venv shellcheck black pylint unit-test ##  run all static checks
 
 
 # Run static-check in github actions (or similar). It should error out if any
 # checks fail, which protects the repo from bad pushes
-static-check: shellcheck black-check pylint unit-test ## repo branch protection
+static-check: .venv shellcheck black-check pylint unit-test ## repo branch protection
 
 clean-cache: ## clean python adn pytest cache data
 	@find . -type f -name "*.py[co]" -delete -not -path "./.venv/*"
