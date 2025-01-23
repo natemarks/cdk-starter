@@ -32,30 +32,24 @@ These Makefile targets help maintain CDK libraries required by the project
 
 - update_cdk_libs: updates the requirements.txt file with the latest cdk library and deletes/recreates the python virtual environment with the updates.
 
-### CDK Actions and Discovery
+## CDK Stacks
+
+See the [README.md](./README.md) document to see how to deploy CDK stacks.
 
 
+### Configuration Data
+
+Configuration data is used to customize stacks in different environments
+without chnaging the stack class. As an example, ASG scaling settings might be
+used to keep  a dev ASG smaller than staging or produciton while using the same
+stack class.
+
+NOTE: configuration data must not be sensitive (credentials, keys, etc.).
+Sensitive data should be in secretsmanager or similar
 
 
-See the [README.md](./README.md) document for an 
-
- - automate cdk commands
-
-### Update Configuration Data from External Sources
-
-The project also contias configuration data.
- - configuration data must not be sensitive (credentials, keys, etc.). Sensitive data should be in secretsmanager or similar
- - configuration data may be  edited manually OR updated with discovery automation
- - configuration data is stored in a per-environment  directory containing JSON files
-
- - update config files with external data
-
-### CDK Stacks
-
-
-#### Configuration Data
-
-Let's start with the configuration data, becuase the stacks depend on it.  There is a config data directory for each environment.  Let's look at the dev environment :
+There is a config data directory for each environment.  Let's
+look at the dev environment :
 
 All dev environment the files are in config/dev/. The stack input classes use
 this directory as a parameter.  All configuratiojn directories are organized in
@@ -83,7 +77,7 @@ NOTE: The 'ACTUAL' environment data for dev, staging and production are in
 config/, but this pattern of just passing around a root config directory also
 makes it easy to create arbitrary, custom tets case input in test_data.
 
-#### Stack Deployment
+### Stack Deployment
 
 
 All CDK projects use app.py as their entry point. For very small projects, you
@@ -100,5 +94,6 @@ for the target environment (DevInventory | StagingInventory |
 ProductionInventory). All Inventory classes have a deploy_stacks() method that
 handles the specific stacks for the environment.
 
-To see how the stack classes are used, look at inventory.py.  Even better, look at the stack unit tests in tests/unit/stack/
+To see how the stack classes are used, look at inventory.py.  Even better, look
+at the stack unit tests in tests/unit/stack/
 
