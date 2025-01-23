@@ -83,7 +83,7 @@ NOTE: The 'ACTUAL' environment data for dev, staging and production are in
 config/, but this pattern of just passing around a root config directory also
 makes it easy to create arbitrary, custom tets case input in test_data.
 
-#### Stack Deplopment
+#### Stack Deployment
 
 
 All CDK projects use app.py as their entry point. For very small projects, you

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """ compare the app_vpc stack to the expected stacks
 
-These tests provide examples for cretaing the stacks. 
-use test data for teh actual environments and any other contrived cases
-that seem useful
+These tests provide examples for creating the stacks. 
 
 
 """
@@ -26,7 +24,11 @@ from tests.helper import case_data_path, update_data_file, read_json_data_file
     ],
 )
 def test_app_vpc_stack_actual(request, environment, update_golden):
-    """test app_vpc stack"""
+    """test app_vpc stack wiht actual environment data
+
+    use the live data in config/dev, config/staging and config/production
+
+    """
     # use stack input data from actual environments
     input_path = get_actual_path(environment)
     # test_data path for case
@@ -59,7 +61,11 @@ def test_app_vpc_stack_actual(request, environment, update_golden):
     ],
 )
 def test_app_vpc_stack_custom(request, update_golden):
-    """test app_vpc stack"""
+    """test app_vpc stack with custom configuration
+
+    test using environment data stored in the case data path. This is convenient
+    for test unusual cases without putting them into an actual environment.
+    """
     # test_data path for case
     data_path = case_data_path(request)
     # the custom input files are in the case data
