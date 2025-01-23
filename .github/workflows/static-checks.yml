@@ -11,8 +11,4 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
-      - run: make shellcheck
-      - run: make clean-venv
-      - run: make black-check
-      - run: make pylint
-      - run: make unit-test
+      - run: make static-check
