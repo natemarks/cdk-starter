@@ -12,7 +12,7 @@ app = cdk.App()
 app_env = app.node.try_get_context("app_env")
 
 # set project-wide tag
-cdk.Tags.of(app).add("iac", "cdk-starter")
+cdk.Tags.of(app).add("iac", "github.com/natemarks/cdk-starter")
 
 inv = get_inventory(app_env)
 inv.set_environment_tags(app)
