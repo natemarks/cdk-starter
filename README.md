@@ -21,6 +21,14 @@ favorite and go to town.
 you can then extend yor CDK project with the same. In this project, CDK builds
 my resources, and I extend that with pyton modules that do things like discover
 AMI IDs, external peering targets, etc.
+5) Automatic resource tagging: CDK makes it easy to automatically tag all taggable resources. This is important if you have many teams sharing a sandbox account. They make it easy to clean up.
+
+I like tags like:
+
+ - 'owner' ('Nate Marks')
+ - 'owner_email' ('npmarks@gmail.com')
+ - 'iac_project' ('github.com/natemarks/cdk-starter')
+
 
 
 NOTE: GNU Make is useful for automating common project tasks, like testing and
@@ -137,6 +145,14 @@ If you look in the git repository, you should see the file:
 config/dev/simple_asg/aaa/simple_asg.json change.  It starts as a simple map in
 JSON with a single key. The new version is fleshed out with all the default
 values for that dataclass AND a new value for the key: ami_id
+
+The discovery process can be run manually, if you want to carefully manage the
+config data changes. Just run the discovery manually and commit the changes to
+the repo. The pipeline that runs your CDK commands will just read the
+configuration data.  Alternatively, if you don't care about the changes, but
+you want the convenience of always using the latest discovered data -  and
+perhaps just checking the impact using CDK diff - run the discovery in the
+pipeline that runs your CDK commands.
 
 
 

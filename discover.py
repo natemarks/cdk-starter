@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """ Discover external data required to deploy the stacks in an environment
+ this module contains a base Disco class and a subclass for each environment:
+DevDisco, StagingDisco, ProductionDisco
 
-Given an app environment id: dev | staging | production
+Every subclass has n 'update_config()' method that is specific to the stacks in
+an environment.
 
-Run the discovery for the configuration data based on the stacks in the
-environment stack inventory
-
+The example is ONLY able to update the ami_id in the setting for SimpleAsg, so
+the subclasses are a bit overkill. It could bbe handled with simple functions.
+As the project grows to include many stacks, the functions become unwieldly.
+The Disco classes help me keep things organized.
 
 
 """
@@ -55,13 +59,17 @@ class Disco:  # pylint: disable=too-few-public-methods
 
     def update_simple_asg(self, stack_id: str):
         """discover the external data for SimpleAsgSetting
-        ami_id: update the setting with the latest available AMI ID
+
+        discover the latest AWS ECS AMI ID  for use in SimpleASg as an example
 
 
         """
         mlog.info("updating simple_asg: %s - %s", self.es.app_env, stack_id)
+        # find the correct setting data to update
         data = SimpleAsgSetting.from_data_path(self.data_path, stack_id)
+        # lookup the latest ami_id and update the setting data
         data.ami_id = latest_ecs_ami_id(self.es.default_region)
+        # write the setting data to the original location
         contents = json.dumps(asdict(data), indent=2)
         file_path = data.setting_path(self.data_path, stack_id)
         file_path.write_text(contents, encoding="utf-8")
@@ -72,7 +80,11 @@ class Disco:  # pylint: disable=too-few-public-methods
 
 
 class DevDisco(Disco):
-    """docstring for DevDisco."""
+    """Disco subclass for dev
+
+    The dev environment has one Simple Asg to update ('aaa'). The data is in
+    config/dev/simple_asg/aaa/
+    """
 
     def update_config(self):
         """sdfg"""
@@ -80,7 +92,11 @@ class DevDisco(Disco):
 
 
 class StagingDisco(Disco):
-    """docstring for DevDisco."""
+    """Disco subclass for staging
+
+    The staging environment has one Simple Asg to update ('bbb'). The data is in
+    config/staging/simple_asg/bbb/
+    """
 
     def update_config(self):
         """sdfg"""
@@ -88,7 +104,11 @@ class StagingDisco(Disco):
 
 
 class ProductionDisco(Disco):
-    """docstring for DevDisco."""
+    """Disco subclass for production
+
+    The production environment has one Simple Asg to update ('ccc'). The data is in
+    config/production/simple_asg/ccc/
+    """
 
     def update_config(self):
         """sdfg"""
