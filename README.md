@@ -4,6 +4,8 @@ If you're interested in creating  Infrastructure as Code (IaC) projects in AWS,
 you've come to the right place. This project is my starting point and I'm happy
 to talk about it. 
 
+If you just want to copy the project as a template, check out the [CUSTOMIZE.md](./CUSTOMIZE.md) doc.
+
 This project is part pitch and part demonstration. 
 
 There are 4 main reasons to choose CDK in AWS:

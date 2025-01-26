@@ -9,11 +9,31 @@ to pass.
 
 ** new project name**
 
-you'll want to change 'cdk-starter' (ex. 'my-new-project')
+you'll want to change 'cdk-starter' (ex. 'cdk-oranges')
 
-** repository **
+Create the new project directory and clone cdk-starter into it:
 
-you may want a new repo. I use 'github.com/natemarks/cdk-starter' in the
+```console
+foo@bar:~$ mkdir -p ~/projects/cdk-oranges
+foo@bar:~$ git clone git@github.com:natemarks/cdk-starter.git ~/projects/cdk-oranges/
+Cloning into '/home/nmarks/projects/cdk-oranges'...
+remote: Enumerating objects: 144, done.
+remote: Counting objects: 100% (144/144), done.
+remote: Compressing objects: 100% (77/77), done.
+remote: Total 144 (delta 37), reused 132 (delta 27), pack-reused 0 (from 0)
+Receiving objects: 100% (144/144), 41.80 KiB | 1.49 MiB/s, done.
+Resolving deltas: 100% (37/37), done.
+# create a new  git repo
+foo@bar:~$ cd ~/project/cdk-oranges
+foo@bar:~$ rm -rf .git
+foo@bar:~$ git init . && git add --all && git commit -v -a
+
+
+```
+
+Customize the project with the following changes
+
+You may want a new repo. I use 'github.com/natemarks/cdk-starter' in the
 resource tags:
 
 ```
@@ -54,6 +74,8 @@ files:
 - dev: config/dev/environment.json
 - staging: config/staging/environment.json
 - production: config/production/environment.json
+
+
 
 
 Run 'make static'. The tests should fail because the template resource names
