@@ -109,6 +109,8 @@ class SimpleAsgStack(Stack):
                     default_region: ami_id,
                 }
             ),
+            http_put_response_hop_limit=1,  # default=1
+            require_imdsv2=True,  # default=False
             security_group=instance_sg,
             user_data=ec2.UserData.custom(
                 userdata_file.read_text(encoding="utf-8")
