@@ -7,6 +7,7 @@ Coordinate specialist subagents so changes are:
 - testable with pytest,
 - reproducible with GNU Make,
 - robust in Bash automation,
+- reliable in GitHub Actions CI/CD,
 - aligned with AWS cloud security best practices.
 
 ## Canonical References
@@ -24,6 +25,7 @@ Each persona is configured as a dedicated subagent document:
 4. `subagents/gnu-make-expert.md`
 5. `subagents/bash-scripting-expert.md`
 6. `subagents/aws-cloud-security-expert.md`
+7. `subagents/github-actions-expert.md`
 
 Use these subagents for non-trivial workstreams; combine findings in one final patch.
 

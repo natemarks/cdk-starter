@@ -5,6 +5,9 @@ Companion files:
 - `.opencode/AGENT.md`: orchestration workflow for specialist personas.
 - `.opencode/SKILL.md`: persona-specific checklists (Python, CDK v2, pytest, Make, Bash, AWS security).
 
+Note: `.opencode/` now includes a dedicated GitHub Actions subagent persona
+(`.opencode/subagents/github-actions-expert.md`) for CI workflow changes.
+
 ## Project Snapshot
 - Stack: AWS CDK app in Python.
 - Entrypoint: `app.py`.
