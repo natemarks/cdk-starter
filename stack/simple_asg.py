@@ -1,10 +1,18 @@
-"""base configuration for settings module
+"""Simple auto scaling group stack and input models.
 
-SimpleAsg demonstrates a stack that:
- - can be deployed multpiple times in an application
- - depends upon another stack (AppVpc)
+Purpose:
+- Define a stack that can be deployed multiple times per environment.
+- Launch EC2 instances in AppVpc private subnets via a launch template.
 
+Flow:
+- `SimpleAsgInput.from_config_directory` loads stack-specific settings.
+- `SimpleAsgStack` consumes `AppVpcStack` for VPC/subnet context.
 
+Customize:
+- instance type, scaling bounds, and root volume settings
+- user data script in `stack/simple_asg/userdata.sh`
+- AMI source strategy (`ami_id` discovery vs managed image lookup)
+- instance role permissions and security group rules
 """
 
 from dataclasses import dataclass
@@ -24,17 +32,14 @@ from stack.app_vpc import AppVpcStack
 
 @dataclass(frozen=True, kw_only=True)
 class SimpleAsgInput:
-    """Input class for SimpleAsg stack
-
-    This object contains data required to deploy a SimpleAsg stack
-    """
+    """Typed input payload for one SimpleAsg stack instance."""
 
     stack_id: str
     env_setting: EnvironmentSetting
     sa_setting: SimpleAsgSetting
 
     def prefix(self) -> str:
-        """return the resource prefix string"""
+        """Return the stack/resource prefix including stack instance id."""
         return (
             f"{APP_NAME}{self.env_setting.prefix()}"
             f"SimpleAsg{self.stack_id.capitalize()}"
@@ -44,7 +49,7 @@ class SimpleAsgInput:
     def from_config_directory(
         cls, data_path: Path, stack_id: str
     ) -> "SimpleAsgInput":
-        """Load a AppVpcInput instance from a configuration directory."""
+        """Build SimpleAsg input from `config/<env>/simple_asg/<id>/...`."""
 
         return cls(
             stack_id=stack_id,
@@ -54,7 +59,11 @@ class SimpleAsgInput:
 
 
 class SimpleAsgStack(Stack):
-    """deploy a simple asg"""
+    """CDK stack that provisions a simple EC2 Auto Scaling Group.
+
+    This stack depends on `AppVpcStack` and deploys instances into private
+    subnets. It also enables IMDSv2 and supports SSM Session Manager access.
+    """
 
     def __init__(
         self,

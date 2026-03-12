@@ -1,21 +1,34 @@
 #!/usr/bin/env python3
-"""Helper functions for pytest
+"""Reusable helpers for unit tests and golden-file workflows.
 
+Purpose:
+- Computes per-test case data directories under `test_data/...`.
+- Provides small text/JSON read/write helpers used by golden tests.
 
+Customize:
+- Keep `case_data_path` naming semantics so existing golden data layout remains
+  deterministic.
+- Extend with additional serialization helpers only if multiple test modules
+  need them.
 """
+
 import json
-import pathlib
+from pathlib import Path
 from typing import Any
+
 import pytest
+
 from config.helper import PROJECT_ROOT
 
 
-def case_data_path(request: pytest.FixtureRequest) -> pathlib.Path:
-    """return the path to test test case data directory"""
-    module_dir = request.node.location[0].removesuffix(".py")
+def case_data_path(request: pytest.FixtureRequest) -> Path:
+    """Return case-data directory for the current test node.
 
-    # module_dir will look like "tests/path/to/pytest/module"
-    # replace tests with test_data
+    Path format:
+    - non-parametrized: `test_data/<module>/<function>/`
+    - parametrized: `test_data/<module>/<function>/<case_id>/`
+    """
+    module_dir = request.node.location[0].removesuffix(".py")
     module_data = "test_data" + str(module_dir).removeprefix("tests")
     function_name = request.node.originalname
     try:
@@ -25,48 +38,33 @@ def case_data_path(request: pytest.FixtureRequest) -> pathlib.Path:
     return PROJECT_ROOT / f"{module_data}/{function_name}/{case_name}"
 
 
-def update_data_file(
-    base_path: pathlib.Path, relative_path: str, contents: str
+def case_file_path(base_path: Path, relative_path: str) -> Path:
+    """Return a file path under a case-data directory."""
+    return base_path / relative_path
+
+
+def write_case_text(
+    base_path: Path, relative_path: str, contents: str
 ) -> None:
-    """
-    Append a relative path to a base Path, ensure the full path exists,
-    and write the contents to the file.
-
-    :param base_path: The base directory as a Path object.
-    :param relative_path: A string representing the subdirectory and filename.
-    :param contents: The string to write to the file.
-    """
-    # Combine base path with the relative path
+    """Write UTF-8 text under case data, creating parent directories."""
     full_path = base_path / relative_path
-
-    # Ensure the parent directories exist
     full_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Write the contents to the file
     full_path.write_text(contents, encoding="utf-8")
 
 
-def read_data_file(base_path: pathlib.Path, relative_path: str) -> str:
-    """
-    Append a relative path to a base Path, assume it is a file,
-    and return its contents.
-
-    :param base_path: The base directory as a Path object.
-    :param relative_path: A string representing the subdirectory and filename.
-    :return: The contents of the file as a string.
-    :raises FileNotFoundError: If the file does not exist.
-    """
-    # Combine base path with the relative path
-    full_path = base_path / relative_path
-
-    # Ensure the file exists and read its contents
+def read_case_text(base_path: Path, relative_path: str) -> str:
+    """Read UTF-8 text from case data."""
+    full_path = case_file_path(base_path, relative_path)
     if not full_path.is_file():
         raise FileNotFoundError(f"The file at {full_path} does not exist.")
-
     return full_path.read_text(encoding="utf-8")
 
 
-def read_json_data_file(base_path: pathlib.Path, relative_path: str) -> Any:
-    """return object from json data file"""
-    full_path = base_path / relative_path
-    return json.loads(full_path.read_text(encoding="utf-8"))
+def write_case_json(base_path: Path, relative_path: str, payload: Any) -> None:
+    """Write indented JSON under case data."""
+    write_case_text(base_path, relative_path, json.dumps(payload, indent=2))
+
+
+def read_case_json(base_path: Path, relative_path: str) -> Any:
+    """Read JSON data from case data."""
+    return json.loads(read_case_text(base_path, relative_path))

@@ -140,7 +140,7 @@ To see it in action, set your AWS credentials and run:
 ```console
 foo@bar:~$ make discover app_env=dev
  ...
-2025-01-21 08:36:31,544 - {__main__} - {discover.py:update_simple_asg:62} - INFO - updating simple_asg: dev - aaa
+2025-01-21 08:36:31,544 - {__main__} - {config.discover:update_simple_asg:87} - INFO - updating simple_asg: dev - aaa
 ```
 
 If you look in the git repository, you should see the file:

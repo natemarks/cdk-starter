@@ -1,5 +1,9 @@
 name: python checks
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   static_checks:
