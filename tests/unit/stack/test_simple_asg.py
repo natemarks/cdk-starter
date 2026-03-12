@@ -7,13 +7,12 @@ seem useful
 
 """
 # pylint: disable=duplicate-code
-import json
 import pytest
 from aws_cdk import App, assertions, Environment
 from config.settings import get_actual_path
 from stack.app_vpc import AppVpcInput, AppVpcStack
 from stack.simple_asg import SimpleAsgInput, SimpleAsgStack
-from tests.helper import case_data_path, update_data_file, read_json_data_file
+from tests.helper import case_data_path, write_case_json, read_case_json
 
 
 @pytest.mark.unit
@@ -53,13 +52,9 @@ def test_simple_asg_stack_actual(
     )
     template = assertions.Template.from_stack(stk)
     if update_golden:
-        update_data_file(
-            data_path,
-            "expected.json",
-            json.dumps(template.to_json(), indent=2),
-        )
+        write_case_json(data_path, "expected.json", template.to_json())
 
-    template.template_matches(read_json_data_file(data_path, "expected.json"))
+    template.template_matches(read_case_json(data_path, "expected.json"))
 
 
 @pytest.mark.unit
@@ -95,10 +90,6 @@ def test_simple_asg_stack_custom(request, stack_id, update_golden):
     )
     template = assertions.Template.from_stack(stk)
     if update_golden:
-        update_data_file(
-            data_path,
-            "expected.json",
-            json.dumps(template.to_json(), indent=2),
-        )
+        write_case_json(data_path, "expected.json", template.to_json())
 
-    template.template_matches(read_json_data_file(data_path, "expected.json"))
+    template.template_matches(read_case_json(data_path, "expected.json"))
