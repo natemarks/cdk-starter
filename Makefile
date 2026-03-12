@@ -216,7 +216,7 @@ discover: .venv ## update environment config data with discovered information
        pyenv local $(PYTHON_VERSION); \
        python --version; \
        source .venv/bin/activate; \
-       PYTHONPATH="." python3 discover.py $(app_env); \
+	       PYTHONPATH="." python3 -m config.discover $(app_env); \
     )
 
 .PHONY: build static test artifact	
