@@ -21,9 +21,9 @@ inv.deploy_stacks(app, cdk_env) # deploy the correct stacks for the env
 
 
 """
-from typing import Dict, Type
+from typing import ClassVar
 
-from aws_cdk import App, Environment, Stack, Tags
+from aws_cdk import App, Environment, Tags
 
 from config.settings import EnvironmentSetting, get_actual_path
 from config.helper import check_aws_account, check_app_env
@@ -34,20 +34,34 @@ from stack.simple_asg import SimpleAsgInput, SimpleAsgStack
 class Inventory:
     """stack inventory for an environment"""
 
+    SIMPLE_ASG_IDS: ClassVar[tuple[str, ...]] = ()
+    TERMINATION_PROTECTION: ClassVar[bool] = False
+
     def __init__(self, app_env: str):
         check_app_env(app_env)
         check_aws_account(app_env)
         self.data_path = get_actual_path(app_env)
         self.app_env = app_env
-        self.unique_stacks = {}  # type: Dict[str, Stack]
-        self.multi_stacks = {}  # type: Dict[str, Dict[str, Stack]]
+        self.unique_stacks: dict[str, AppVpcStack] = {}
+        self.multi_stacks: dict[str, dict[str, SimpleAsgStack]] = {}
         self.environment_setting = EnvironmentSetting.from_data_path(
             self.data_path
         )
 
     def deploy_stacks(self, app: App, cdk_env: Environment):
         """deploy the stacks"""
-        raise NotImplementedError
+        self.app_vpc_stack(
+            app,
+            cdk_env,
+            termination_protection=self.TERMINATION_PROTECTION,
+        )
+        for stack_id in self.SIMPLE_ASG_IDS:
+            self.simple_asg_stack(
+                app,
+                cdk_env,
+                stack_id,
+                termination_protection=self.TERMINATION_PROTECTION,
+            )
 
     def set_environment_tags(self, app: App):
         """set the tags for the stack"""
@@ -76,20 +90,25 @@ class Inventory:
         termination_protection: bool,
     ) -> SimpleAsgStack:
         """create the simple_asg stack"""
-        if "simple_asg" not in self.multi_stacks:
-            self.multi_stacks["simple_asg"] = {}
+        app_vpc_stack = self.unique_stacks.get("app_vpc")
+        if app_vpc_stack is None:
+            raise RuntimeError(
+                "app_vpc stack must be created before simple_asg stacks"
+            )
+
+        simple_asg_stacks = self.multi_stacks.setdefault("simple_asg", {})
 
         s_input = SimpleAsgInput.from_config_directory(
             self.data_path, stack_id
         )
-        self.multi_stacks["simple_asg"][stack_id] = SimpleAsgStack(
+        simple_asg_stacks[stack_id] = SimpleAsgStack(
             scope=app,
             cdk_env=cdk_env,
             s_input=s_input,
-            app_vpc_stack=self.unique_stacks["app_vpc"],
+            app_vpc_stack=app_vpc_stack,
             termination_protection=termination_protection,
         )
-        return self.multi_stacks["simple_asg"][stack_id]
+        return simple_asg_stacks[stack_id]
 
 
 class DevInventory(Inventory):
@@ -100,12 +119,7 @@ class DevInventory(Inventory):
     DevXRayAccessDev2Stack
     """
 
-    def deploy_stacks(self, app: App, cdk_env: Environment):
-        """deploy the stacks"""
-        self.app_vpc_stack(app, cdk_env, termination_protection=False)
-        self.simple_asg_stack(
-            app, cdk_env, "aaa", termination_protection=False
-        )
+    SIMPLE_ASG_IDS = ("aaa",)
 
 
 class StagingInventory(Inventory):
@@ -117,12 +131,7 @@ class StagingInventory(Inventory):
     StagingXRayAccessStaging2Stack
     """
 
-    def deploy_stacks(self, app: App, cdk_env: Environment):
-        """deploy the stacks"""
-        self.app_vpc_stack(app, cdk_env, termination_protection=False)
-        self.simple_asg_stack(
-            app, cdk_env, "bbb", termination_protection=False
-        )
+    SIMPLE_ASG_IDS = ("bbb",)
 
 
 class ProductionInventory(Inventory):
@@ -134,16 +143,11 @@ class ProductionInventory(Inventory):
     ProductionXRayAccessProd2Stack
     """
 
-    def deploy_stacks(self, app: App, cdk_env: Environment):
-        """deploy the stacks"""
-        self.app_vpc_stack(app, cdk_env, termination_protection=False)
-        self.simple_asg_stack(
-            app, cdk_env, "ccc", termination_protection=False
-        )
+    SIMPLE_ASG_IDS = ("ccc",)
 
 
 # Dictionary to map setting types to dataclass constructors
-INVENTORY_MAP: Dict[str, Type] = {
+INVENTORY_MAP: dict[str, type[Inventory]] = {
     "dev": DevInventory,
     "staging": StagingInventory,
     "production": ProductionInventory,
