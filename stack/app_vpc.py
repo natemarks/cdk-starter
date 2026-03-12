@@ -1,11 +1,18 @@
-""" AppVpc Stack Module
+"""Application VPC stack and input models.
 
-Stack and Stack Input classes to manage the Application VPC template
+Purpose:
+- Load typed VPC settings from environment config files.
+- Build the project VPC, subnet layout, interface endpoints, and private DNS.
 
-Use AppVpcInput.from_config_directory to create an AppVpcInput instance from a
-data_path. A data path is a pathlib.Path to a directory containing the settings
-for an environment
+Flow:
+- `AppVpcInput.from_config_directory` converts config JSON to typed input.
+- `AppVpcStack` synthesizes resources from that input.
 
+Customize:
+- subnet structure and naming
+- VPC endpoint set
+- private hosted zone naming
+- CIDR and AZ count in `config/<env>/app_vpc/app_vpc.json`
 """
 
 from dataclasses import dataclass
@@ -23,21 +30,18 @@ from config.settings import EnvironmentSetting, AppVpcSetting
 
 @dataclass(frozen=True, kw_only=True)
 class AppVpcInput:
-    """Input class for AppVpc stack
-
-    This object contains data required to deploy a AppVpc stack
-    """
+    """Typed input payload for `AppVpcStack`."""
 
     env_setting: EnvironmentSetting
     app_vpc_setting: AppVpcSetting
 
     def prefix(self) -> str:
-        """return the resource prefix string"""
+        """Return the stack/resource prefix for this environment."""
         return f"{APP_NAME}{self.env_setting.prefix()}AppVpc"
 
     @classmethod
     def from_config_directory(cls, data_path: Path) -> "AppVpcInput":
-        """Load a AppVpcInput instance from a configuration directory."""
+        """Build AppVpc input from `config/<env>/...` files."""
 
         return cls(
             env_setting=EnvironmentSetting.from_data_path(data_path),
@@ -46,7 +50,13 @@ class AppVpcInput:
 
 
 class AppVpcStack(Stack):
-    """sdf"""
+    """CDK stack that provisions the project VPC and related network resources.
+
+    Resources:
+    - VPC with public/private/isolated subnets
+    - interface endpoints for core EC2/SSM/ECS services
+    - private Route53 hosted zone scoped to the VPC
+    """
 
     def __init__(
         self,

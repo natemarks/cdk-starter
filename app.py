@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
-""" AWS CDK Application
+"""CDK app entrypoint.
+
+Purpose:
+- Create the CDK app object and apply project/global tags.
+- Resolve environment context (`app_env`) and load inventory settings.
+- Deploy the environment's stack set using typed config data.
+
+Flow:
+- Read `app_env` from CDK context.
+- Build inventory via `get_inventory(app_env)`.
+- Build `cdk.Environment` from inventory settings.
+- Call `deploy_stacks` and synthesize the app.
+
+Customize:
+- Add or change global tags.
+- Change how `app_env` is resolved.
+- Add pre-deploy validation gates before `deploy_stacks`.
 """
 import aws_cdk as cdk
 from config.inventory import get_inventory

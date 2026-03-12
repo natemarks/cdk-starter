@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-""" compare the simple_asg stack to the expected stacks
+"""Golden tests for the SimpleAsg stack template.
 
-use test data for teh actual environments and any other contrived cases that
-seem useful
+Purpose:
+- Stack synthesis from real environment config under `config/<env>/...`.
+- Stack synthesis from custom case-local config under `test_data/...`.
 
-
+Customize:
+- Keep the `*_actual` test for environment contracts.
+- Add custom cases for unusual launch template or ASG requirements.
+- Use `--update_golden` only when expected template changes are intentional.
 """
 # pylint: disable=duplicate-code
 import pytest
@@ -27,10 +31,7 @@ from tests.helper import case_data_path, write_case_json, read_case_json
 def test_simple_asg_stack_actual(
     request, environment, stack_id, update_golden
 ):
-    """test simple_asg stack with actual environment data
-
-    use the live data in config/dev, config/staging and config/production
-    """
+    """Compare SimpleAsg template against golden data for real environments."""
     # use stack input data from actual environments
     input_path = get_actual_path(environment)
     # test_data path for case
@@ -65,11 +66,7 @@ def test_simple_asg_stack_actual(
     ],
 )
 def test_simple_asg_stack_custom(request, stack_id, update_golden):
-    """test app_vpc stack with custom configuration
-
-    test using environment data stored in the case data path. This is convenient
-    for test unusual cases without putting them into an actual environment.
-    """
+    """Compare SimpleAsg template against golden data for custom case config."""
     # test_data path for case
     data_path = case_data_path(request)
     input_path = data_path

@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-""" Discover external data required to deploy the stacks in an environment
- this module contains a base Disco class and a subclass for each environment:
-DevDisco, StagingDisco, ProductionDisco
+"""Discovery workflow for external configuration data.
 
-Every subclass has n 'update_config()' method that is specific to the stacks in
-an environment.
+Purpose:
+- Query external AWS data required by stacks in each environment.
+- Update config files in `config/<env>/...` with discovered values.
 
-The example is ONLY able to update the ami_id in the setting for SimpleAsg, so
-the subclasses are a bit overkill. It could bbe handled with simple functions.
-As the project grows to include many stacks, the functions become unwieldly.
-The Disco classes help me keep things organized.
+Flow:
+- Parse target environment from CLI args.
+- Build an environment-specific discovery class.
+- Run `update_config` to refresh stack-specific settings.
 
-
+Customize:
+- Add new discovery methods for additional stacks.
+- Extend environment subclasses to choose which stack IDs to refresh.
+- Replace file writes with another storage backend if needed.
 """
 import argparse
 from dataclasses import asdict
@@ -29,10 +31,7 @@ mlog = get_logger(str(__name__))
 
 
 def get_environment_id():
-    """
-    Parse the command line arguments to get the environment ID.
-    The environment ID must be one of ['dev', 'staging', 'production'].
-    """
+    """Return environment id from CLI args (`dev|staging|production`)."""
     parser = argparse.ArgumentParser(description="Get the environment ID.")
     parser.add_argument(
         "environment",
@@ -45,11 +44,7 @@ def get_environment_id():
 
 
 class Disco:  # pylint: disable=too-few-public-methods
-    """Discover external configuration data
-    gather external data for a given app_env (dev | staging | production)
-
-    update the appropriate settings files in config/
-    """
+    """Base class for environment-specific discovery updates."""
 
     def __init__(self, app_env: str):
         check_app_env(app_env)
@@ -58,11 +53,10 @@ class Disco:  # pylint: disable=too-few-public-methods
         self.es = EnvironmentSetting.from_data_path(self.data_path)
 
     def update_simple_asg(self, stack_id: str):
-        """discover the external data for SimpleAsgSetting
+        """Refresh SimpleAsg settings with discovered external values.
 
-        discover the latest AWS ECS AMI ID  for use in SimpleASg as an example
-
-
+        This currently updates `ami_id` to the latest ECS-optimized AMI in the
+        environment's default region.
         """
         mlog.info("updating simple_asg: %s - %s", self.es.app_env, stack_id)
         # find the correct setting data to update
@@ -75,43 +69,31 @@ class Disco:  # pylint: disable=too-few-public-methods
         file_path.write_text(contents, encoding="utf-8")
 
     def update_config(self):
-        """abstract"""
+        """Run discovery updates for the target environment."""
         raise NotImplementedError
 
 
 class DevDisco(Disco):
-    """Disco subclass for dev
-
-    The dev environment has one Simple Asg to update ('aaa'). The data is in
-    config/dev/simple_asg/aaa/
-    """
+    """Discovery behavior for the dev environment."""
 
     def update_config(self):
-        """sdfg"""
+        """Refresh discovery-backed settings for dev."""
         self.update_simple_asg("aaa")
 
 
 class StagingDisco(Disco):
-    """Disco subclass for staging
-
-    The staging environment has one Simple Asg to update ('bbb'). The data is in
-    config/staging/simple_asg/bbb/
-    """
+    """Discovery behavior for the staging environment."""
 
     def update_config(self):
-        """sdfg"""
+        """Refresh discovery-backed settings for staging."""
         self.update_simple_asg("bbb")
 
 
 class ProductionDisco(Disco):
-    """Disco subclass for production
-
-    The production environment has one Simple Asg to update ('ccc'). The data is in
-    config/production/simple_asg/ccc/
-    """
+    """Discovery behavior for the production environment."""
 
     def update_config(self):
-        """sdfg"""
+        """Refresh discovery-backed settings for production."""
         self.update_simple_asg("ccc")
 
 
@@ -124,7 +106,7 @@ DISCO_MAP: Dict[str, Type] = {
 
 
 def get_disco(app_env: str) -> Disco:
-    """Create an instance of the appropriate Disco type"""
+    """Return discovery implementation for the requested environment."""
     if app_env in DISCO_MAP:
         return DISCO_MAP[app_env](app_env=app_env)
     raise ValueError(f"invalid environment for locations: {app_env}")

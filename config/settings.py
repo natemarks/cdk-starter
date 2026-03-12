@@ -1,6 +1,17 @@
-""" dataclasses for settings files
+"""Settings models loaded from `config/<environment>/...` JSON files.
 
+Purpose:
+- Define typed dataclasses used as stack input settings.
+- Map each settings class to a relative JSON path.
 
+Flow:
+- `JsonSettingBase.setting_path` resolves the file path.
+- `JsonSettingBase.from_data_path` parses JSON into dataclass instances.
+
+Customize:
+- Add dataclasses for new stacks.
+- Set `RELATIVE_PATH_TEMPLATE` for each settings class.
+- Keep `EnvironmentSetting` aligned with account/region/tag strategy.
 """
 
 from dataclasses import dataclass
@@ -17,13 +28,17 @@ t_json_setting = TypeVar(  # pylint: disable=invalid-name
 
 
 class JsonSettingBase:
-    """Base class for config dataclasses loaded from JSON files."""
+    """Base class for config dataclasses loaded from JSON files.
+
+    Subclasses set `RELATIVE_PATH_TEMPLATE` and inherit shared path and load
+    helpers.
+    """
 
     RELATIVE_PATH_TEMPLATE: ClassVar[str] = ""
 
     @classmethod
     def setting_path(cls, data_path: Path, *path_args: str) -> Path:
-        """Return the setting file path for this setting class."""
+        """Return the resolved settings JSON path for this class."""
         if not cls.RELATIVE_PATH_TEMPLATE:
             raise RuntimeError(
                 f"{cls.__name__} must define RELATIVE_PATH_TEMPLATE"
@@ -40,23 +55,26 @@ class JsonSettingBase:
     def from_data_path(
         cls: Type[t_json_setting], data_path: Path, *path_args: str
     ) -> t_json_setting:
-        """Load a setting instance from a configuration directory."""
+        """Load a settings dataclass instance from a config directory."""
         return cls(
             **dict_from_json_file(cls.setting_path(data_path, *path_args))
         )
 
 
 def get_actual_path(environment: str) -> Path:
-    """return the data path for a given environment
-    This is used to access the live data as opposed to test_data
-
-    """
+    """Return the repository path to `config/<environment>`."""
     return Path(__file__).parent.joinpath(environment)
 
 
 @dataclass(frozen=True, kw_only=True)
 class EnvironmentSetting(JsonSettingBase):
-    """environment config data used for all stacks"""
+    """Environment-level settings shared by all stacks.
+
+    Commonly customized fields:
+    - account/region identifiers
+    - environment naming and release flags
+    - DNS defaults used by stack modules
+    """
 
     RELATIVE_PATH_TEMPLATE: ClassVar[str] = "environment.json"
 
@@ -69,13 +87,17 @@ class EnvironmentSetting(JsonSettingBase):
     is_release: bool  # ex. False
 
     def prefix(self) -> str:
-        """return the environment part pf the resource prefix"""
+        """Return the environment name portion used in resource prefixes."""
         return self.app_env.capitalize()
 
 
 @dataclass(frozen=False, kw_only=True)
 class SimpleAsgSetting(JsonSettingBase):
-    """environment config data used for all stacks"""
+    """Settings for each SimpleAsg stack instance.
+
+    This dataclass is intentionally mutable because discovery workflows may
+    update fields such as `ami_id` before deployment.
+    """
 
     RELATIVE_PATH_TEMPLATE: ClassVar[str] = "simple_asg/{0}/simple_asg.json"
 
@@ -89,7 +111,12 @@ class SimpleAsgSetting(JsonSettingBase):
 
 @dataclass(frozen=True, kw_only=True)
 class AppVpcSetting(JsonSettingBase):
-    """settings for app vpc"""
+    """Settings for the AppVpc stack template.
+
+    Commonly customized fields:
+    - CIDR range
+    - availability-zone count
+    """
 
     RELATIVE_PATH_TEMPLATE: ClassVar[str] = "app_vpc/app_vpc.json"
 

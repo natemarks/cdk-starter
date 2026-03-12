@@ -1,6 +1,15 @@
-"""helper functions for settings module
+"""Shared config, discovery, and AWS utility helpers.
 
+Purpose:
+- Define project constants used in naming and path resolution.
+- Provide JSON parsing helpers for config settings modules.
+- Validate app environment and caller AWS account alignment.
+- Discover latest ECS AMI id values for discovery workflows.
 
+Customize:
+- Update `APP_NAME` for your project naming prefix.
+- Update `APP_ENV_TO_AWS_ACCOUNT` for your account mapping.
+- Extend helper functions when new discovery or validation behavior is needed.
 """
 
 import logging
@@ -19,10 +28,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 
 def get_logger(module_name: str) -> logging.Logger:
-    """return standard logger
-    usage:
-    MODULE_LOGGER = get_logger(str(__name__))
-    """
+    """Return a module logger with repository-standard formatter."""
     my_logger = logging.getLogger(module_name)
     my_logger.setLevel(logging.INFO)
 
@@ -48,16 +54,13 @@ APP_ENV_TO_AWS_ACCOUNT = {
 
 
 def check_app_env(ae: str):
-    """raise if the app_env isn't valid"""
+    """Raise `ValueError` if app environment id is not supported."""
     if ae not in APP_ENV_TO_AWS_ACCOUNT:
         raise ValueError(f"invalid app_env: {ae}")
 
 
 def ensure_path_exists(path: Path):
-    """Ensure that the directory of the given path exists.
-    If the path is a file create all parent directories.
-    If the path is a directory create the directory and all parent directories.
-    """
+    """Ensure the target path (or its parent directory) exists."""
     if not isinstance(path, Path):
         raise TypeError("path must be a pathlib.Path object")
 
@@ -78,7 +81,7 @@ def ensure_path_exists(path: Path):
 
 
 def dict_from_json_string(json_string: str) -> Dict[str, Any]:
-    """return a ict  or a dataclass from a json string"""
+    """Parse JSON string and return a dict with string keys."""
 
     # Parse the JSON string into a dictionary
     def is_dict_with_string_keys(variable: Any) -> bool:
@@ -95,14 +98,14 @@ def dict_from_json_string(json_string: str) -> Dict[str, Any]:
 
 
 def dict_from_json_file(json_file: Path) -> Any:
-    """return a dictionary from a json file"""
+    """Load and parse JSON file as a dictionary."""
     with json_file.open() as file:
         return dict_from_json_string(file.read())
 
 
 @dataclass(frozen=False, kw_only=True)
 class AwsCallerIdentity:
-    """identity data class. handy for autocompletion"""
+    """Typed wrapper for AWS STS caller identity fields."""
 
     account: str
     arn: str
@@ -110,7 +113,7 @@ class AwsCallerIdentity:
 
 
 def get_caller_identity() -> AwsCallerIdentity:
-    """return the current caller identity"""
+    """Return caller identity for current AWS credentials."""
     client = boto3.client("sts")
     response = client.get_caller_identity()
 
@@ -124,7 +127,7 @@ def get_caller_identity() -> AwsCallerIdentity:
 
 
 def check_aws_account(app_env: str):
-    """raise an exception if current account is incorrect for hybrid_env"""
+    """Validate current AWS account for the requested app environment."""
     caller_identity = get_caller_identity()
     if caller_identity.account != APP_ENV_TO_AWS_ACCOUNT[app_env]:
         raise RuntimeError(
@@ -135,11 +138,12 @@ def check_aws_account(app_env: str):
 
 
 def latest_ecs_ami_id(aws_region: str) -> str:
-    """returtn the latest ECS ami
+    """Return latest ECS-optimized Amazon Linux 2 AMI id in region.
 
-    name: 'amzn2-ami-ecs-hvm-*'
-    virtualization-type: 'hvm'
-    architecture: x86_64
+    Filters:
+    - name: `amzn2-ami-ecs-hvm-*`
+    - virtualization-type: `hvm`
+    - architecture: `x86_64`
     """
     ec2 = boto3.client("ec2", region_name=aws_region)
     paginator = ec2.get_paginator("describe_images")

@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
-""" the inventory of stacks in an environment
+"""Environment-specific stack inventory for the CDK app.
 
-The inventory is used to determine which stacks should be deployyed based on
-the environment. It handles two types of stacks:
+Purpose:
+- Select stacks to deploy per environment.
+- Apply shared environment tags.
+- Enforce stack dependency order (AppVpc before SimpleAsg).
 
- - unique stack: can only be deployed once per environment. doesn't need a stack_id
- - multi stack: can be deployed multiple times in an environment. needs a stack_id
+Flow:
+- `get_inventory(app_env)` returns an `Inventory` subclass.
+- `Inventory.deploy_stacks` creates AppVpc, then one SimpleAsg per
+  `SIMPLE_ASG_IDS` entry.
 
-This module is used by app.py like this:
-
-inv = get_inventory(app_env) # get the class for the environment
-inv.set_environment_tags(app) # set env specific tags
-
-# set the cdk_environment
-cdk_env = cdk.Environment(
-account=inv.environment_setting().aws_account_number,
-region=inv.environment_setting().default_region,)
-
-inv.deploy_stacks(app, cdk_env) # deploy the correct stacks for the env
-
-
+Customize:
+- Add or remove stack factories in `deploy_stacks`.
+- Change `SIMPLE_ASG_IDS` in each environment subclass.
+- Enable termination protection per environment.
+- Extend shared tags in `set_environment_tags`.
 """
 from typing import ClassVar
 
@@ -32,12 +28,16 @@ from stack.simple_asg import SimpleAsgInput, SimpleAsgStack
 
 
 class Inventory:
-    """stack inventory for an environment"""
+    """Base inventory for deploying stacks in one application environment.
+
+    Subclasses customize rollout through class variables.
+    """
 
     SIMPLE_ASG_IDS: ClassVar[tuple[str, ...]] = ()
     TERMINATION_PROTECTION: ClassVar[bool] = False
 
     def __init__(self, app_env: str):
+        """Validate environment/account and load environment settings."""
         check_app_env(app_env)
         check_aws_account(app_env)
         self.data_path = get_actual_path(app_env)
@@ -49,7 +49,7 @@ class Inventory:
         )
 
     def deploy_stacks(self, app: App, cdk_env: Environment):
-        """deploy the stacks"""
+        """Deploy stacks in dependency order for this environment."""
         self.app_vpc_stack(
             app,
             cdk_env,
@@ -64,7 +64,7 @@ class Inventory:
             )
 
     def set_environment_tags(self, app: App):
-        """set the tags for the stack"""
+        """Apply shared environment tags to all stacks in the app."""
         Tags.of(app).add("env_id", self.app_env)
         Tags.of(app).add("app_env", self.app_env)
         Tags.of(app).add("Environment", self.app_env)
@@ -72,7 +72,7 @@ class Inventory:
     def app_vpc_stack(
         self, app: App, cdk_env: Environment, termination_protection: bool
     ) -> AppVpcStack:
-        """create the app vpc stack"""
+        """Create and register the single AppVpc stack for this env."""
         s_input = AppVpcInput.from_config_directory(self.data_path)
         self.unique_stacks["app_vpc"] = AppVpcStack(
             scope=app,
@@ -89,7 +89,10 @@ class Inventory:
         stack_id: str,
         termination_protection: bool,
     ) -> SimpleAsgStack:
-        """create the simple_asg stack"""
+        """Create and register one SimpleAsg stack instance.
+
+        The AppVpc stack must already exist because SimpleAsg consumes the VPC.
+        """
         app_vpc_stack = self.unique_stacks.get("app_vpc")
         if app_vpc_stack is None:
             raise RuntimeError(
@@ -112,36 +115,24 @@ class Inventory:
 
 
 class DevInventory(Inventory):
-    """stack inventory for dev environment
+    """Inventory settings for the dev environment.
 
-    DevAppVpcStack
-    DevBiometricAwareStack
-    DevXRayAccessDev2Stack
+    Commonly changed for new projects:
+    - number of SimpleAsg instances (`SIMPLE_ASG_IDS`)
+    - termination protection policy
     """
 
     SIMPLE_ASG_IDS = ("aaa",)
 
 
 class StagingInventory(Inventory):
-    """stack inventory for staging environment
-
-    StagingAppVpcStack
-    StagingBiometricAwareStack
-    StagingXRayAccessStaging1Stack
-    StagingXRayAccessStaging2Stack
-    """
+    """Inventory settings for the staging environment."""
 
     SIMPLE_ASG_IDS = ("bbb",)
 
 
 class ProductionInventory(Inventory):
-    """stack inventory for production environment
-
-    ProductionAppVpcStack
-    ProductionBiometricAwareStack
-    ProductionXRayAccessProd1Stack
-    ProductionXRayAccessProd2Stack
-    """
+    """Inventory settings for the production environment."""
 
     SIMPLE_ASG_IDS = ("ccc",)
 
@@ -155,7 +146,7 @@ INVENTORY_MAP: dict[str, type[Inventory]] = {
 
 
 def get_inventory(app_env: str) -> Inventory:
-    """Create an instance of the appropriate Inventory type"""
+    """Return the inventory object for the requested application environment."""
     if app_env in INVENTORY_MAP:
         return INVENTORY_MAP[app_env](app_env=app_env)
     raise ValueError(f"invalid environment for locations: {app_env}")

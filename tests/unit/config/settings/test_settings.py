@@ -1,5 +1,8 @@
-""" Test the functions that manage config settings
+"""Unit tests for `config.settings` behavior.
 
+Purpose:
+- Verify environment config path resolution.
+- Verify settings model loading semantics used by stack constructors.
 """
 
 import pytest

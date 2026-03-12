@@ -1,5 +1,8 @@
-""" Test helper functions
+"""Unit tests for shared test helper utilities.
 
+Purpose:
+- Keep the `test_data/...` path contract stable.
+- Keep golden-file read/write helpers stable and predictable.
 """
 
 import pytest
