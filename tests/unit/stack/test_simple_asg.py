@@ -10,6 +10,7 @@ Customize:
 - Add custom cases for unusual launch template or ASG requirements.
 - Use `--update_golden` only when expected template changes are intentional.
 """
+
 # pylint: disable=duplicate-code
 import pytest
 from aws_cdk import App, assertions, Environment

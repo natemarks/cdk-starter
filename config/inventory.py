@@ -17,6 +17,7 @@ Customize:
 - Enable termination protection per environment.
 - Extend shared tags in `set_environment_tags`.
 """
+
 from typing import ClassVar
 
 from aws_cdk import App, Environment, Tags

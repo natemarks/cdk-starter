@@ -10,6 +10,7 @@ Customize:
 - Add or expand `*_custom` cases for edge scenarios.
 - Use `--update_golden` only when template changes are intentional.
 """
+
 # pylint: disable=duplicate-code
 import pytest
 from aws_cdk import App, assertions, Environment

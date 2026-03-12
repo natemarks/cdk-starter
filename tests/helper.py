@@ -11,6 +11,7 @@ Customize:
 - Extend with additional serialization helpers only if multiple test modules
   need them.
 """
+
 import json
 from pathlib import Path
 from typing import Any
