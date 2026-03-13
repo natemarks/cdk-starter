@@ -2,14 +2,15 @@
 
 Purpose:
 - Centralize project-specific values used across app, config, and stacks.
-- Provide one metadata file (`template_defaults.json`) for template init tools.
+- Provide one metadata file (`template_defaults.json`) for GitHub template users.
 
 Flow:
 - Load defaults from `config/template_defaults.json` at import time.
 - Expose typed module constants consumed by runtime modules.
 
 Customize:
-- For new projects, update `config/template_defaults.json` first.
+- For new projects created from the GitHub template, update
+  `config/template_defaults.json` first.
 - Keep environment keys consistent across account and rollout mappings.
 """
 

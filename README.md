@@ -4,7 +4,23 @@ If you're interested in creating  Infrastructure as Code (IaC) projects in AWS,
 you've come to the right place. This project is my starting point and I'm happy
 to talk about it. 
 
-If you just want to copy the project as a template, check out the [CUSTOMIZE.md](./CUSTOMIZE.md) doc.
+If you are using this as a GitHub template repository, start with
+[CUSTOMIZE.md](./CUSTOMIZE.md).
+
+## Quick Start (Template Consumers)
+
+```console
+make .venv
+make node_modules
+make unit-test
+```
+
+If naming changes cause golden-file diffs, run:
+
+```console
+make unit-update_golden
+make unit-test
+```
 
 This project is part pitch and part demonstration. 
 
