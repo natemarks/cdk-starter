@@ -13,7 +13,7 @@ Flow:
 
 Customize:
 - Add or remove stack factories in `deploy_stacks`.
-- Change `SIMPLE_ASG_IDS` in each environment subclass.
+- Change rollout ids in `config/template_defaults.json`.
 - Enable termination protection per environment.
 - Extend shared tags in `set_environment_tags`.
 """
@@ -23,6 +23,7 @@ from typing import ClassVar
 from aws_cdk import App, Environment, Tags
 
 from config.settings import EnvironmentSetting, get_actual_path
+from config.project import SIMPLE_ASG_IDS_BY_ENV
 from config.helper import check_aws_account, check_app_env
 from stack.app_vpc import AppVpcInput, AppVpcStack
 from stack.simple_asg import SimpleAsgInput, SimpleAsgStack
@@ -123,19 +124,19 @@ class DevInventory(Inventory):
     - termination protection policy
     """
 
-    SIMPLE_ASG_IDS = ("aaa",)
+    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["dev"]
 
 
 class StagingInventory(Inventory):
     """Inventory settings for the staging environment."""
 
-    SIMPLE_ASG_IDS = ("bbb",)
+    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["staging"]
 
 
 class ProductionInventory(Inventory):
     """Inventory settings for the production environment."""
 
-    SIMPLE_ASG_IDS = ("ccc",)
+    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["production"]
 
 
 # Dictionary to map setting types to dataclass constructors

@@ -1,82 +1,110 @@
-# customize
+# Customize
 
+This repository is intended to be used as a **GitHub Template Repository**.
+Use this guide to create a new project quickly and get to a passing test suite.
 
+## 1) Maintainer setup (one time)
 
-## Changing names but keep the tests working
-If you want to create a new project from this one, I'd start by just renaming
-the high level project constants, while making sure the project test continue
-to pass.
+In this repository on GitHub:
+- `Settings` -> `General` -> `Template repository` -> enable.
 
-** new project name**
+After that, consumers can use `Use this template` from the repo page.
 
-you'll want to change 'cdk-starter' (ex. 'cdk-oranges')
+## 2) Create a new project from the template
 
-Create the new project directory and clone cdk-starter into it:
+From GitHub UI:
+- Click `Use this template`.
+- Choose owner, repository name, and visibility.
+- Clone the new repository locally.
+
+Example:
 
 ```console
-foo@bar:~$ mkdir -p ~/projects/cdk-oranges
-foo@bar:~$ git clone git@github.com:natemarks/cdk-starter.git ~/projects/cdk-oranges/
-Cloning into '/home/nmarks/projects/cdk-oranges'...
-remote: Enumerating objects: 144, done.
-remote: Counting objects: 100% (144/144), done.
-remote: Compressing objects: 100% (77/77), done.
-remote: Total 144 (delta 37), reused 132 (delta 27), pack-reused 0 (from 0)
-Receiving objects: 100% (144/144), 41.80 KiB | 1.49 MiB/s, done.
-Resolving deltas: 100% (37/37), done.
-# create a new  git repo
-foo@bar:~$ cd ~/project/cdk-oranges
-foo@bar:~$ rm -rf .git
-foo@bar:~$ git init . && git add --all && git commit -v -a
-
-
+git clone git@github.com:<your-org>/<your-repo>.git
+cd <your-repo>
 ```
 
-Customize the project with the following changes
+## 3) Install prerequisites
 
-You may want a new repo. I use 'github.com/natemarks/cdk-starter' in the
-resource tags:
+You need:
+- Python `3.10.6` (managed with `pyenv` in this project)
+- `pyenv`
+- `python3-venv` support
+- Node.js + `npm`
+- AWS CDK CLI dependency is installed via `make node_modules`
 
-```
-# app.py
-cdk.Tags.of(app).add("iac", "github.com/natemarks/cdk-starter")
-```
+Sanity check commands:
 
-** app name **
-
-You'll want a new App name. I use 'Starter' at the beginning of every resource
-name for this project. It's configured here:
-```
-# config/helper.py
-APP_NAME = "Starter"
+```console
+python3 --version
+pyenv --version
+npm --version
 ```
 
+## 4) Bootstrap local tooling
 
-** AWS Account **
-
-I use the AWS account number to raise an exception if I try to deploy a stack
-in the wrong aws account. I've absolutely made that mistake before :D
-
-```
-# config/helper.py
-APP_ENV_TO_AWS_ACCOUNT = {
-    "dev": "709310380790",
-    "staging": "709310380790",
-    "production": "709310380790",
-}
+```console
+make .venv
+make node_modules
 ```
 
+This creates `.venv/` and installs both Python and CDK Node dependencies.
 
-** AWS Region **
-The AWS region is specified in the 'default_region' attribte of the
-EnvironmentSetting for each environment. That means it's stored in these JSON
-files:
+## 5) Update template-specific project settings
 
-- dev: config/dev/environment.json
-- staging: config/staging/environment.json
-- production: config/production/environment.json
+Primary customization file:
+- `config/template_defaults.json`
 
+Update at minimum:
+- `app_name`
+- `iac_project_url`
+- `app_env_to_aws_account`
+- `simple_asg_ids_by_env` (if you want different rollout IDs)
 
+Then update per-environment settings:
+- `config/dev/environment.json`
+- `config/staging/environment.json`
+- `config/production/environment.json`
 
+Common fields to change in each environment JSON:
+- `aws_account_name`
+- `aws_account_number`
+- `default_region`
+- `default_fqdn`
+- optionally `admin_team`, `is_release`
 
-Run 'make static'. The tests should fail because the template resource names
-won't match the expected ones. Run 'make unit-update_golden'. That should pass.
+## 6) Get the new project running
+
+Run validation in this order:
+
+```console
+make black-check
+make pylint
+make unit-test
+```
+
+If tests fail because names/prefixes changed (expected for template adoption):
+
+```console
+make unit-update_golden
+make unit-test
+```
+
+Goal: unit tests pass in the new repository.
+
+## 7) Optional: refresh discovered config data
+
+If you use discovery-managed values (like AMI IDs):
+
+```console
+make discover app_env=dev
+```
+
+Review and commit changed config files under `config/<env>/...`.
+
+## 8) First commit checklist for template consumers
+
+- `config/template_defaults.json` matches your project
+- `config/*/environment.json` matches your accounts/regions/domains
+- `make unit-test` passes
+- any intentional golden changes are committed

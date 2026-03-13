@@ -14,6 +14,7 @@ Flow:
 Customize:
 - Add new discovery methods for additional settings classes.
 - Extend environment subclasses to choose which stack IDs to refresh.
+- Update rollout ids in `config/template_defaults.json`.
 - Replace file persistence with another backend if needed.
 """
 
@@ -29,6 +30,7 @@ from config.helper import (
     get_logger,
     latest_ecs_ami_id,
 )
+from config.project import SIMPLE_ASG_IDS_BY_ENV, SUPPORTED_APP_ENVS
 from config.settings import (
     EnvironmentSetting,
     SimpleAsgSetting,
@@ -44,14 +46,14 @@ def get_environment_id() -> str:
     parser.add_argument(
         "environment",
         type=str,
-        choices=["dev", "staging", "production"],
+        choices=list(SUPPORTED_APP_ENVS),
         help="Environment ID (must be one of: dev, staging, production)",
     )
     args = parser.parse_args()
     return args.environment
 
 
-def write_setting_json(setting_path: Path, setting: object) -> None:
+def write_setting_json(setting_path: Path, setting: SimpleAsgSetting) -> None:
     """Write dataclass-based setting object to JSON with indentation."""
     setting_path.write_text(
         json.dumps(asdict(setting), indent=2), encoding="utf-8"
@@ -103,19 +105,19 @@ class DiscoveryRunner:
 class DevDiscoveryRunner(DiscoveryRunner):
     """Discovery behavior for the dev environment."""
 
-    SIMPLE_ASG_IDS = ("aaa",)
+    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["dev"]
 
 
 class StagingDiscoveryRunner(DiscoveryRunner):
     """Discovery behavior for the staging environment."""
 
-    SIMPLE_ASG_IDS = ("bbb",)
+    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["staging"]
 
 
 class ProductionDiscoveryRunner(DiscoveryRunner):
     """Discovery behavior for the production environment."""
 
-    SIMPLE_ASG_IDS = ("ccc",)
+    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["production"]
 
 
 DISCOVERY_MAP: dict[str, type[DiscoveryRunner]] = {
