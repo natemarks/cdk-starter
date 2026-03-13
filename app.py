@@ -13,12 +13,13 @@ Flow:
 - Call `deploy_stacks` and synthesize the app.
 
 Customize:
-- Add or change global tags.
+- Add or change global tags in `config/template_defaults.json`.
 - Change how `app_env` is resolved.
 - Add pre-deploy validation gates before `deploy_stacks`.
 """
 
 import aws_cdk as cdk
+from config.project import IAC_PROJECT_URL
 from config.inventory import get_inventory
 
 # call the data sync checker to ensure the data is in sync
@@ -29,7 +30,7 @@ app = cdk.App()
 app_env = app.node.try_get_context("app_env")
 
 # set project-wide tag
-cdk.Tags.of(app).add("iac", "github.com/natemarks/cdk-starter")
+cdk.Tags.of(app).add("iac", IAC_PROJECT_URL)
 
 inv = get_inventory(app_env)
 inv.set_environment_tags(app)

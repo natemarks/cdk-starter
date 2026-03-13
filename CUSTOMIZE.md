@@ -44,10 +44,10 @@ cdk.Tags.of(app).add("iac", "github.com/natemarks/cdk-starter")
 ** app name **
 
 You'll want a new App name. I use 'Starter' at the beginning of every resource
-name for this project. It's configured here:
+name for this project. It's configured in:
 ```
-# config/helper.py
-APP_NAME = "Starter"
+# config/template_defaults.json
+"app_name": "Starter"
 ```
 
 
@@ -57,12 +57,21 @@ I use the AWS account number to raise an exception if I try to deploy a stack
 in the wrong aws account. I've absolutely made that mistake before :D
 
 ```
-# config/helper.py
-APP_ENV_TO_AWS_ACCOUNT = {
+# config/template_defaults.json
+"app_env_to_aws_account": {
     "dev": "709310380790",
     "staging": "709310380790",
     "production": "709310380790",
 }
+```
+
+** repo url tag **
+
+The project-level IAC tag value is also centralized in:
+
+```
+# config/template_defaults.json
+"iac_project_url": "github.com/natemarks/cdk-starter"
 ```
 
 

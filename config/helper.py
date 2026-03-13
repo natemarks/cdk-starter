@@ -6,9 +6,12 @@ Purpose:
 - Validate app environment and caller AWS account alignment.
 - Discover latest ECS AMI id values for discovery workflows.
 
+Flow:
+- Import project identity and rollout constants from `config.project`.
+- Apply shared helpers from app, inventory, and discovery modules.
+
 Customize:
-- Update `APP_NAME` for your project naming prefix.
-- Update `APP_ENV_TO_AWS_ACCOUNT` for your account mapping.
+- Update `config/template_defaults.json` for project naming and account mapping.
 - Extend helper functions when new discovery or validation behavior is needed.
 """
 
@@ -21,9 +24,10 @@ from typing import Any, Dict
 
 import boto3
 
-# APP_NAME is used to distinguis stacks with similar names in different projects
-# like "AppVpc". this allows the project to be used multiple times in a single AWS account
-APP_NAME = "Starter"
+from config.project import APP_ENV_TO_AWS_ACCOUNT, APP_NAME as _APP_NAME
+
+APP_NAME = _APP_NAME
+
 PROJECT_ROOT = Path(__file__).parent.parent
 
 
@@ -45,12 +49,6 @@ def get_logger(module_name: str) -> logging.Logger:
 
 
 module_logger = get_logger(str(__name__))
-
-APP_ENV_TO_AWS_ACCOUNT = {
-    "dev": "709310380790",
-    "staging": "709310380790",
-    "production": "709310380790",
-}
 
 
 def check_app_env(ae: str):
