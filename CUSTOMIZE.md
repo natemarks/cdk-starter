@@ -27,7 +27,7 @@ cd <your-repo>
 ## 3) Install prerequisites
 
 You need:
-- Python `3.10.6` (managed with `pyenv` in this project)
+- Python `3.12.13` (managed with `pyenv` in this project)
 - `pyenv`
 - `python3-venv` support
 - Node.js + `npm`

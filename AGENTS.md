@@ -23,7 +23,7 @@ Note: `.opencode/` now includes a dedicated GitHub Actions subagent persona
 
 ## Environment Setup
 - Python is configured via `pyenv` in Make targets.
-- Expected Python version in `Makefile`: `3.10.6`.
+- Expected Python version in `Makefile`: `3.12.13`.
 - Virtual environment path: `.venv/`.
 - CDK CLI dependency: Node package `aws-cdk`.
 
