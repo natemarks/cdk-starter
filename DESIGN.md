@@ -89,11 +89,15 @@ environment
 
 
 I prefer to take that complexity out of app.py.  The app.py in this project
-simply passes 'app_env' to get_inventory(), which returns an inventory object
-for the target environment (DevInventory | StagingInventory |
-ProductionInventory). All Inventory classes have a deploy_stacks() method that
-handles the specific stacks for the environment.
+simply passes 'app_env' to get_inventory(), which returns an Inventory
+instance. Inventory.deploy_stacks iterates STACKS_BY_ENV[app_env] — the
+ordered list of StackFactory objects declared in config/registry.py — and
+calls each factory's deploy callable in order.
 
-To see how the stack classes are used, look at inventory.py.  Even better, look
-at the stack unit tests in tests/unit/stack/
+STACKS_BY_ENV is the single place to answer "what stacks deploy in staging?"
+and the single file to edit when adding a stack, adding an instance of an
+existing stack type, or graduating a stack to a higher environment.
+
+To see how the stack classes are used, look at config/registry.py and
+inventory.py. Even better, look at the stack unit tests in tests/unit/stack/
 
