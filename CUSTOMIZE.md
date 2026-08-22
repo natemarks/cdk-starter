@@ -52,6 +52,12 @@ This creates `.venv/` and installs both Python and CDK Node dependencies.
 
 ## 5) Update template-specific project settings
 
+Replace the template CLAUDE.md with the project-specific version:
+
+```console
+mv CLAUDE.template.md CLAUDE.md
+```
+
 Primary customization file:
 - `config/template_defaults.json`
 
