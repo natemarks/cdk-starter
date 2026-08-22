@@ -79,6 +79,11 @@ npm install aws-cdk@$(CDK_VERSION)
 
 ## Working standards
 
+**Make targets are the interface.** Use `make` targets for all build, test,
+lint, and CDK operations. Reach for direct `pytest`, `pylint`, `black`, or
+`cdk` invocations only when no target covers the case (e.g., running a single
+test, or checking an untracked file before staging).
+
 ### `make static`
 
 Run `make static` whenever code changes. It runs `shellcheck`, `black`

@@ -5,18 +5,17 @@ from unittest.mock import patch
 import pytest
 from aws_cdk import App, Environment, Stack
 
+from config.helper import APP_NAME
 from config.inventory import Inventory
 
+_dev = f"{APP_NAME}Dev"
+_stg = f"{APP_NAME}Staging"
+_prd = f"{APP_NAME}Production"
+
 EXPECTED_STACK_NAMES = {
-    "dev": {"StarterDevAppVpcStack", "StarterDevSimpleAsgAaaStack"},
-    "staging": {
-        "StarterStagingAppVpcStack",
-        "StarterStagingSimpleAsgBbbStack",
-    },
-    "production": {
-        "StarterProductionAppVpcStack",
-        "StarterProductionSimpleAsgCccStack",
-    },
+    "dev": {f"{_dev}AppVpcStack", f"{_dev}SimpleAsgAaaStack"},
+    "staging": {f"{_stg}AppVpcStack", f"{_stg}SimpleAsgBbbStack"},
+    "production": {f"{_prd}AppVpcStack", f"{_prd}SimpleAsgCccStack"},
 }
 
 
