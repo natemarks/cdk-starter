@@ -59,7 +59,6 @@ Update at minimum:
 - `app_name`
 - `iac_project_url`
 - `app_env_to_aws_account`
-- `simple_asg_ids_by_env` (if you want different rollout IDs)
 
 Then update per-environment settings:
 - `config/dev/environment.json`
@@ -72,6 +71,19 @@ Common fields to change in each environment JSON:
 - `default_region`
 - `default_fqdn`
 - optionally `admin_team`, `is_release`
+
+### Managing which stacks deploy per environment
+
+`config/registry.py` is the single file to edit for all stack eligibility changes:
+
+- **Add a new stack type** — implement a deploy function in a new `stack/` module,
+  add a `StackFactory` constant or factory function in `registry.py`, then add it
+  to the `STACKS_BY_ENV` lists for the environments where it should deploy.
+- **Add a new stack instance** (multi-stack) — call the factory function with a new
+  `stack_id` and append it to the appropriate environment list(s). Add the
+  corresponding config files under `config/<env>/` before deploying.
+- **Graduate a stack to a higher environment** — add its `StackFactory` to the target
+  environment's list in `STACKS_BY_ENV`. Ensure config files exist for that env.
 
 ## 6) Get the new project running
 

@@ -14,7 +14,6 @@ Customize:
 # pylint: disable=duplicate-code
 import pytest
 from aws_cdk import App, assertions, Environment
-from config.project import SIMPLE_ASG_IDS_BY_ENV
 from config.settings import get_actual_path
 from stack.app_vpc import AppVpcInput, AppVpcStack
 from stack.simple_asg import SimpleAsgInput, SimpleAsgStack
@@ -25,8 +24,9 @@ from tests.helper import case_data_path, write_case_json, read_case_json
 @pytest.mark.parametrize(
     "environment,stack_id",
     [
-        pytest.param(env, ids[0], id=env)
-        for env, ids in SIMPLE_ASG_IDS_BY_ENV.items()
+        pytest.param("dev", "aaa", id="dev"),
+        pytest.param("staging", "bbb", id="staging"),
+        pytest.param("production", "ccc", id="production"),
     ],
 )
 def test_simple_asg_stack_actual(

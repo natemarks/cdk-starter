@@ -3,39 +3,26 @@
 
 Purpose:
 - Query external AWS data required by stacks in each environment.
-- Return updated settings models from discovery operations.
 - Persist updated settings under `config/<env>/...`.
 
 Flow:
 - Parse target environment from CLI args.
-- Build an environment-specific discovery runner.
-- Discover updated setting values and write them back to JSON config files.
+- Build a DiscoveryRunner for that environment.
+- DiscoveryRunner.run iterates STACKS_BY_ENV[app_env] and calls discover
+  on each factory that has one.
 
 Customize:
-- Add new discovery methods for additional settings classes.
-- Extend environment subclasses to choose which stack IDs to refresh.
-- Update rollout ids in `config/template_defaults.json`.
-- Replace file persistence with another backend if needed.
+- Add new stack types with discovery by adding a discover callable to their
+  StackFactory in config/registry.py.
+- Add new standalone discovery functions in config/discovery_functions.py.
 """
 
 import argparse
-from dataclasses import asdict
-import json
-from pathlib import Path
-from typing import ClassVar
 
-from config.helper import (
-    check_app_env,
-    check_aws_account,
-    get_logger,
-    latest_ecs_ami_id,
-)
-from config.project import SIMPLE_ASG_IDS_BY_ENV, SUPPORTED_APP_ENVS
-from config.settings import (
-    EnvironmentSetting,
-    SimpleAsgSetting,
-    get_actual_path,
-)
+from config.helper import check_app_env, check_aws_account, get_logger
+from config.project import SUPPORTED_APP_ENVS
+from config.registry import STACKS_BY_ENV
+from config.settings import get_actual_path
 
 mlog = get_logger(str(__name__))
 
@@ -53,90 +40,36 @@ def get_environment_id() -> str:
     return args.environment
 
 
-def write_setting_json(setting_path: Path, setting: SimpleAsgSetting) -> None:
-    """Write dataclass-based setting object to JSON with indentation."""
-    setting_path.write_text(
-        json.dumps(asdict(setting), indent=2), encoding="utf-8"
-    )
+class DiscoveryRunner:  # pylint: disable=too-few-public-methods
+    """Runs discovery for all eligible stacks in one application environment.
 
-
-class DiscoveryRunner:
-    """Base class for environment-specific discovery updates.
-
-    Subclasses select discovery targets through class variables.
+    For each factory in STACKS_BY_ENV[app_env], calls factory.discover if it
+    is not None, passing the environment data path. Factories with
+    discover=None are silently skipped.
     """
 
-    SIMPLE_ASG_IDS: ClassVar[tuple[str, ...]] = ()
-
     def __init__(self, app_env: str):
-        """Validate environment/account and load environment settings."""
+        """Validate environment/account and resolve data path."""
         check_app_env(app_env)
         check_aws_account(app_env)
+        self.app_env = app_env
         self.data_path = get_actual_path(app_env)
-        self.environment_setting = EnvironmentSetting.from_data_path(
-            self.data_path
-        )
 
-    def discover_simple_asg_setting(self, stack_id: str) -> SimpleAsgSetting:
-        """Return SimpleAsgSetting with discovered external values applied."""
-        mlog.info(
-            "updating simple_asg: %s - %s",
-            self.environment_setting.app_env,
-            stack_id,
-        )
-        setting = SimpleAsgSetting.from_data_path(self.data_path, stack_id)
-        setting.ami_id = latest_ecs_ami_id(
-            self.environment_setting.default_region
-        )
-        return setting
-
-    def update_simple_asg(self, stack_id: str) -> None:
-        """Discover and persist updates for one SimpleAsg stack id."""
-        setting = self.discover_simple_asg_setting(stack_id)
-        setting_path = setting.setting_path(self.data_path, stack_id)
-        write_setting_json(setting_path, setting)
-
-    def update_config(self) -> None:
-        """Run discovery updates for configured stack ids in this env."""
-        for stack_id in self.SIMPLE_ASG_IDS:
-            self.update_simple_asg(stack_id)
-
-
-class DevDiscoveryRunner(DiscoveryRunner):
-    """Discovery behavior for the dev environment."""
-
-    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["dev"]
-
-
-class StagingDiscoveryRunner(DiscoveryRunner):
-    """Discovery behavior for the staging environment."""
-
-    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["staging"]
-
-
-class ProductionDiscoveryRunner(DiscoveryRunner):
-    """Discovery behavior for the production environment."""
-
-    SIMPLE_ASG_IDS = SIMPLE_ASG_IDS_BY_ENV["production"]
-
-
-DISCOVERY_MAP: dict[str, type[DiscoveryRunner]] = {
-    "dev": DevDiscoveryRunner,
-    "staging": StagingDiscoveryRunner,
-    "production": ProductionDiscoveryRunner,
-}
+    def run(self) -> None:
+        """Run discover for every eligible stack factory that has one."""
+        for factory in STACKS_BY_ENV[self.app_env]:
+            if factory.discover is not None:
+                factory.discover(self.data_path)
 
 
 def get_discovery_runner(app_env: str) -> DiscoveryRunner:
-    """Return discovery runner implementation for environment."""
-    if app_env in DISCOVERY_MAP:
-        return DISCOVERY_MAP[app_env](app_env=app_env)
-    raise ValueError(f"invalid environment for discovery: {app_env}")
+    """Return a DiscoveryRunner for the requested application environment."""
+    return DiscoveryRunner(app_env)
 
 
 def main() -> None:
-    """Run discovery for requested environment."""
-    get_discovery_runner(get_environment_id()).update_config()
+    """Run discovery for the requested environment."""
+    get_discovery_runner(get_environment_id()).run()
 
 
 if __name__ == "__main__":
