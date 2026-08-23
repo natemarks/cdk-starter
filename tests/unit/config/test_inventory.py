@@ -8,14 +8,14 @@ from aws_cdk import App, Environment, Stack
 from config.helper import APP_NAME
 from config.inventory import Inventory
 
-_dev = f"{APP_NAME}Dev"
-_stg = f"{APP_NAME}Staging"
-_prd = f"{APP_NAME}Production"
+_DEV = f"{APP_NAME}Dev"
+_STG = f"{APP_NAME}Staging"
+_PRD = f"{APP_NAME}Production"
 
 EXPECTED_STACK_NAMES = {
-    "dev": {f"{_dev}AppVpcStack", f"{_dev}SimpleAsgAaaStack"},
-    "staging": {f"{_stg}AppVpcStack", f"{_stg}SimpleAsgBbbStack"},
-    "production": {f"{_prd}AppVpcStack", f"{_prd}SimpleAsgCccStack"},
+    "dev": {f"{_DEV}AppVpcStack", f"{_DEV}SimpleAsgAaaStack"},
+    "staging": {f"{_STG}AppVpcStack", f"{_STG}SimpleAsgBbbStack"},
+    "production": {f"{_PRD}AppVpcStack", f"{_PRD}SimpleAsgCccStack"},
 }
 
 

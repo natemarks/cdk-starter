@@ -73,7 +73,9 @@ class Inventory:
 
     def _deploy_app_vpc(self, app: App, cdk_env: Environment) -> AppVpcStack:
         """Create and return the AppVpc stack."""
-        s_input = AppVpcInput.from_config_directory(self.data_path)
+        s_input = AppVpcInput.from_config_directory(
+            self.data_path, env_setting=self.environment_setting
+        )
         return AppVpcStack(
             scope=app,
             cdk_env=cdk_env,
@@ -93,7 +95,9 @@ class Inventory:
         )
         app_vpc_stack = self._get_deployed(app_vpc_name)
         s_input = SimpleAsgInput.from_config_directory(
-            self.data_path, stack_id
+            self.data_path,
+            stack_id,
+            env_setting=self.environment_setting,
         )
         return SimpleAsgStack(
             scope=app,

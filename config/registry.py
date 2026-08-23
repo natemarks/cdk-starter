@@ -50,9 +50,9 @@ def simple_asg(stack_id: str) -> StackFactory:
     """Return a StackFactory for one SimpleAsg instance identified by stack_id."""
 
     def _deploy(inv, app, cdk_env):
-        return inv._deploy_simple_asg(
+        return inv._deploy_simple_asg(  # pylint: disable=protected-access
             app, cdk_env, stack_id
-        )  # pylint: disable=protected-access
+        )
 
     def _discover(data_path: Path) -> None:
         discover_simple_asg(data_path, stack_id)

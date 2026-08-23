@@ -13,6 +13,7 @@ DEFAULT_BRANCH := main
 app_env := dev
 PYTHON_VERSION := 3.12.13
 CDK_VERSION := 2.70.0
+SHELL_PREAMBLE = source scripts/enable_pyenv.sh; pyenv local $(PYTHON_VERSION); python --version; source .venv/bin/activate;
 
 help: ## Show this help.
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
@@ -118,105 +119,58 @@ node_modules: ## create node_modules/ if it doesn't exist
 	$(MAKE) clean-venv
 
 cdk-ls: node_modules .venv ## run cdk ls
-	# cdk executable usually: node_modules/aws-cdk/bin/cdk
-	# have to be evaluated after the node_modules target
 	$(eval CDK := $(shell find . -type f -name cdk))
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-       $(CDK) ls -c app_env=$(app_env); \
-    )
+	   $(SHELL_PREAMBLE) \
+	   $(CDK) ls -c app_env=$(app_env); \
+	)
 
 cdk-diff: node_modules .venv ## cdk diff a single stack
-	# cdk executable usually: node_modules/aws-cdk/bin/cdk
-	# have to be evaluated after the node_modules target
 	$(eval CDK := $(shell find . -type f -name cdk))
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-       $(CDK) diff $(stack) -c app_env=$(app_env); \
-    )
+	   $(SHELL_PREAMBLE) \
+	   $(CDK) diff $(stack) -c app_env=$(app_env); \
+	)
 
 cdk-diff-all: node_modules .venv ## cdk diff all stacks in the envirnment
-	# cdk executable usually: node_modules/aws-cdk/bin/cdk
-	# have to be evaluated after the node_modules target
 	$(eval CDK := $(shell find . -type f -name cdk))
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-       $(CDK) diff --all -c app_env=$(app_env); \
-    )
+	   $(SHELL_PREAMBLE) \
+	   $(CDK) diff --all -c app_env=$(app_env); \
+	)
 
 cdk-deploy: node_modules .venv ## cdk deploy a single stack
-	# cdk executable usually: node_modules/aws-cdk/bin/cdk
-	# have to be evaluated after the node_modules target
 	$(eval CDK := $(shell find . -type f -name cdk))
-	# source the pyenv config script
-	# set the local python version. redundant but harmless
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-       $(CDK) deploy --require-approval never $(stack) -c app_env=$(app_env); \
-    )
+	   $(SHELL_PREAMBLE) \
+	   $(CDK) deploy --require-approval never $(stack) -c app_env=$(app_env); \
+	)
 
 cdk-destroy: node_modules .venv ## cdk destroy a single stack
-	# cdk executable usually: node_modules/aws-cdk/bin/cdk
-	# have to be evaluated after the node_modules target
 	$(eval CDK := $(shell find . -type f -name cdk))
-	# source the pyenv config script
-	# set the local python version. redundant but harmless
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-       $(CDK) destroy --force $(stack) -c app_env=$(app_env); \
-    )
+	   $(SHELL_PREAMBLE) \
+	   $(CDK) destroy --force $(stack) -c app_env=$(app_env); \
+	)
 
 cdk-deploy-all: node_modules .venv ## cdk deploy all stacks in an environment
-	# cdk executable usually: node_modules/aws-cdk/bin/cdk
-	# have to be evaluated after the node_modules target
 	$(eval CDK := $(shell find . -type f -name cdk))
-	# source the pyenv config script
-	# set the local python version. redundant but harmless
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-       $(CDK) deploy --all $(stack) -c app_env=$(app_env); \
-    )
+	   $(SHELL_PREAMBLE) \
+	   $(CDK) deploy --all $(stack) -c app_env=$(app_env); \
+	)
 
 cdk-bootstrap: node_modules .venv ## bootstrap the default account and region for an environment
-	# cdk executable usually: node_modules/aws-cdk/bin/cdk
-	# have to be evaluated after the node_modules target
 	$(eval CDK := $(shell find . -type f -name cdk))
-	# source the pyenv config script
-	# set the local python version. redundant but harmless
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-       $(CDK) $(shell bash scripts/cdk_bootstrap.sh) -c app_env=$(app_env); \
-    )
-
+	   $(SHELL_PREAMBLE) \
+	   $(CDK) $(shell bash scripts/cdk_bootstrap.sh) -c app_env=$(app_env); \
+	)
 
 discover: .venv ## update environment config data with discovered information
 	( \
-       source scripts/enable_pyenv.sh; \
-       pyenv local $(PYTHON_VERSION); \
-       python --version; \
-       source .venv/bin/activate; \
-	       PYTHONPATH="." python3 -m config.discover $(app_env); \
-    )
+	   $(SHELL_PREAMBLE) \
+	   PYTHONPATH="." python3 -m config.discover $(app_env); \
+	)
 
 .PHONY: build static test artifact	
