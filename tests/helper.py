@@ -56,7 +56,10 @@ def read_case_text(base_path: Path, relative_path: str) -> str:
     """Read UTF-8 text from case data."""
     full_path = case_file_path(base_path, relative_path)
     if not full_path.is_file():
-        raise FileNotFoundError(f"The file at {full_path} does not exist.")
+        raise FileNotFoundError(
+            f"The file at {full_path} does not exist. "
+            "Run 'make unit-update_golden' to generate it."
+        )
     return full_path.read_text(encoding="utf-8")
 
 

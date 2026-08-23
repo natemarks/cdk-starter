@@ -10,16 +10,5 @@
     "dev": "709310380790",
     "staging": "709310380790",
     "production": "709310380790"
-  },
-  "simple_asg_ids_by_env": {
-    "dev": [
-      "aaa"
-    ],
-    "staging": [
-      "bbb"
-    ],
-    "production": [
-      "ccc"
-    ]
   }
 }

@@ -8,8 +8,9 @@ Purpose:
 from pathlib import Path
 
 from config.helper import PROJECT_ROOT
-
-APP_ENVS = ("dev", "staging", "production")
+from config.project import (  # pylint: disable=unused-import
+    SUPPORTED_APP_ENVS as APP_ENVS,
+)
 
 
 def expected_config_path(environment: str) -> Path:

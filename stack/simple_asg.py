@@ -47,13 +47,16 @@ class SimpleAsgInput:
 
     @classmethod
     def from_config_directory(
-        cls, data_path: Path, stack_id: str
+        cls,
+        data_path: Path,
+        stack_id: str,
+        env_setting: EnvironmentSetting | None = None,
     ) -> "SimpleAsgInput":
         """Build SimpleAsg input from `config/<env>/simple_asg/<id>/...`."""
-
         return cls(
             stack_id=stack_id,
-            env_setting=EnvironmentSetting.from_data_path(data_path),
+            env_setting=env_setting
+            or EnvironmentSetting.from_data_path(data_path),
             sa_setting=SimpleAsgSetting.from_data_path(data_path, stack_id),
         )
 

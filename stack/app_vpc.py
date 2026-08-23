@@ -40,11 +40,15 @@ class AppVpcInput:
         return f"{APP_NAME}{self.env_setting.prefix()}AppVpc"
 
     @classmethod
-    def from_config_directory(cls, data_path: Path) -> "AppVpcInput":
+    def from_config_directory(
+        cls,
+        data_path: Path,
+        env_setting: EnvironmentSetting | None = None,
+    ) -> "AppVpcInput":
         """Build AppVpc input from `config/<env>/...` files."""
-
         return cls(
-            env_setting=EnvironmentSetting.from_data_path(data_path),
+            env_setting=env_setting
+            or EnvironmentSetting.from_data_path(data_path),
             app_vpc_setting=AppVpcSetting.from_data_path(data_path),
         )
 

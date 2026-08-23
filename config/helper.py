@@ -44,7 +44,8 @@ def get_logger(module_name: str) -> logging.Logger:
     )
     console_handler.setFormatter(formatter)
 
-    my_logger.addHandler(console_handler)
+    if not my_logger.handlers:
+        my_logger.addHandler(console_handler)
     return my_logger
 
 

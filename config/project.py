@@ -64,29 +64,6 @@ def _require_string_map(data: dict[str, Any], key: str) -> dict[str, str]:
     return dict(value)
 
 
-def _require_string_list_map(
-    data: dict[str, Any], key: str
-) -> dict[str, tuple[str, ...]]:
-    """Return required mapping[str, tuple[str, ...]] for key."""
-    value = data.get(key)
-    if not isinstance(value, dict):
-        raise RuntimeError(f"Expected mapping for {key} in {DEFAULTS_PATH}")
-    result: dict[str, tuple[str, ...]] = {}
-    for env_key, env_values in value.items():
-        if not isinstance(env_key, str):
-            raise RuntimeError(
-                f"Expected string keys for {key} in {DEFAULTS_PATH}"
-            )
-        if not isinstance(env_values, list) or not all(
-            isinstance(item, str) for item in env_values
-        ):
-            raise RuntimeError(
-                f"Expected list[str] values for {key} in {DEFAULTS_PATH}"
-            )
-        result[env_key] = tuple(env_values)
-    return result
-
-
 _DEFAULTS = _load_defaults()
 
 APP_NAME = _require_string(_DEFAULTS, "app_name")
@@ -95,18 +72,10 @@ SUPPORTED_APP_ENVS = _require_string_list(_DEFAULTS, "supported_app_envs")
 APP_ENV_TO_AWS_ACCOUNT = _require_string_map(
     _DEFAULTS, "app_env_to_aws_account"
 )
-SIMPLE_ASG_IDS_BY_ENV = _require_string_list_map(
-    _DEFAULTS, "simple_asg_ids_by_env"
-)
 
 for app_env in SUPPORTED_APP_ENVS:
     if app_env not in APP_ENV_TO_AWS_ACCOUNT:
         raise RuntimeError(
             "Missing account mapping for environment "
-            f"{app_env} in {DEFAULTS_PATH}"
-        )
-    if app_env not in SIMPLE_ASG_IDS_BY_ENV:
-        raise RuntimeError(
-            "Missing SimpleAsg rollout ids for environment "
             f"{app_env} in {DEFAULTS_PATH}"
         )
