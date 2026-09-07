@@ -111,6 +111,22 @@ comment. Add a brief explanation when the reason is not obvious from context.
 Golden files store expected CloudFormation templates. `test_*_actual` tests
 compare synthesized output against them; a mismatch fails the test.
 
+**New stack — required tests:**
+
+Create `tests/unit/stack/test_<stack_name>.py` modeled on `test_app_vpc.py`
+(unique stack) or `test_simple_asg.py` (multi-stack).
+
+1. Write `test_<stack_name>_stack_actual` parametrized with one `pytest.param`
+   per environment (`dev`, `staging`, `production`). Load config via
+   `get_actual_path(environment)`. Multi-stacks parametrize by
+   `(environment, stack_id)`. If the stack depends on another stack, construct
+   the dependency first using the same `input_path`.
+2. Add `test_<stack_name>_stack_custom` cases for settings or combinations the
+   real environment configs do not exercise. Custom input files live inside the
+   case's `test_data/` directory.
+3. Run `make unit-update_golden` to generate initial golden files, then
+   `make unit-test` to confirm all cases pass.
+
 **Intentional template change** (you changed a stack module on purpose):
 ```bash
 make unit-update_golden   # regenerate
